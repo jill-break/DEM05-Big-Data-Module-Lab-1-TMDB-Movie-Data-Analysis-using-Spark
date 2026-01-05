@@ -95,6 +95,7 @@ A comparative analysis (visualized in the 4-grid report) yielded distinct profil
 ---
 
 ### 5. Conclusion & Future Work
+
 The "TMDB Movie Data Analysis" project demonstrates a complete lifecycle for modern data engineering. By prioritizing scalability (Spark), reliability (Retries/Logging), and maintainability (Modules/Tests), the system is production-ready.
 
 **4.1 What I Learnt**
