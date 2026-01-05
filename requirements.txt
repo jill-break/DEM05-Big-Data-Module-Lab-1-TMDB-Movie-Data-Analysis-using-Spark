@@ -1,0 +1,18 @@
+# Core Spark Engine
+pyspark==3.5.0
+
+# API Fetching
+requests==2.31.0
+
+# Data Manipulation (for visualization preparation)
+pandas==2.1.4
+numpy==1.26.3
+pyarrow==14.0.2
+
+# Visualization
+matplotlib==3.8.2
+seaborn==0.13.1
+
+# Utilities & Configuration
+python-dotenv==1.0.0  # For loading API keys securely
+jupyter==1.0.0        # For running the notebooks
