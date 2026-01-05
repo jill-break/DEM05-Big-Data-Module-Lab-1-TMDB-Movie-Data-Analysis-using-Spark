@@ -83,7 +83,17 @@ def plot_franchise_comparison(pdf_franchise):
     fig.suptitle('Franchise vs Standalone Movie Performance', fontsize=14, weight='bold')
 
     def _plot_sub(ax, y_col, title, ylabel, is_rating=False):
-        sns.barplot(data=pdf_franchise, x='type', y=y_col, ax=ax, palette=['#2b8cbe', '#a53e74'], edgecolor='black')
+        # FIX: Added hue='type' and legend=False to silence warnings
+        sns.barplot(
+            data=pdf_franchise, 
+            x='type', 
+            y=y_col, 
+            hue='type', 
+            ax=ax, 
+            palette=['#2b8cbe', '#a53e74'], 
+            edgecolor='black',
+            legend=False
+        )
         ax.set_title(title)
         ax.set_ylabel(ylabel)
         ax.set_xlabel('')
