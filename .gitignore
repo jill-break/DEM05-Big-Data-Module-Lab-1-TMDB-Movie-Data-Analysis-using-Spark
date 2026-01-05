@@ -1,3 +1,11 @@
-.venv
 .env
-./notebooks/.ipynb_checkpoints
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+*.log
+data/raw/*
+data/processed/*
+.vscode/
+.idea/
