@@ -24,7 +24,7 @@ Objective: Securely fetch data from an external REST API while adhering to rate 
 
 *Implementation:*
 
-`Resilience:` Implemented a custom fetch_single_movie function with exponential backoff. It automatically detects 429 Too Many Requests errors and waits before retrying, ensuring the pipeline never crashes due to API throttling.
+`Resilience:` Implemented a custom `fetch_single_movie` function with exponential backoff. It automatically detects 429 Too Many Requests errors and waits before retrying, ensuring the pipeline never crashes due to API throttling.
 
 `Observability:` Integrated a file-based logging system (logs/ingestion.log). This provides an audit trail of every API attempt, success, or failure, which is critical for debugging in production environments.
 
@@ -37,7 +37,7 @@ Objective: Securely fetch data from an external REST API while adhering to rate 
 
 `The Problem:` The raw data contained nested arrays (e.g., genres, production_companies) that Spark initially misidentified as "Maps" or "Strings," leading to potential data loss.
 
-`The Solution:` We defined explicit StructType Schemas in src/config.py. This forced Spark to recognize the deep structure of the data, allowing us to accurately extract specific fields (like genre.name or collection.name) using vectorized expressions.
+`The Solution:` I defined explicit StructType Schemas in src/config.py. This forced Spark to recognize the deep structure of the data, allowing us to accurately extract specific fields (like genre.name or collection.name) using vectorized expressions.
 
 `Optimization:`
 Used Lazy Evaluation and caching (df.cache()) to optimize memory usage during repeated aggregation steps.
@@ -45,11 +45,11 @@ Used Lazy Evaluation and caching (df.cache()) to optimize memory usage during re
 Employed Vectorized Operations (e.g., F.expr("transform(...)")) instead of Python loops, significantly improving processing speed.
 
 **2.3 Quality Assurance (Testing)**
-Framework: pytest
+Framework: `pytest`
 
 `Coverage:` A dedicated test suite (tests/test_cleaning.py) was created to validate the business logic.
 
-`Mocking:` We simulated "dirty" data (e.g., unreleased movies, zero-budget films) to prove that the cleaning functions correctly filter and calculate metrics like Profit and ROI before deploying the code.
+`Mocking:` I simulated "dirty" data (e.g., unreleased movies, zero-budget films) to prove that the cleaning functions correctly filter and calculate metrics like Profit and ROI before deploying the code.
 
 ---
 
@@ -57,7 +57,7 @@ Framework: pytest
 **3.1 The "Blockbuster" Economy**
 The dataset confirms the industry's reliance on massive tentpole productions.
 
-~Revenue Drivers:` The top 10% of movies by budget accounted for a disproportionately large share of the total revenue.
+`Revenue Drivers:` The top 10% of movies by budget accounted for a disproportionately large share of the total revenue.
 
 `Budget Inflation`: A clear trend line shows the average budget for high-profile movies has steadily increased over the last two decades.
 
@@ -88,14 +88,25 @@ A comparative analysis (visualized in the 4-grid report) yielded distinct profil
 ### 4. Challenges & Solutions
 | Challenge                 | Solution |
 |---------------------------|----------|
-| Schema Inference Failure  | Spark failed to read nested JSON correctly, treating arrays as strings. We implemented a strict custom schema using `StructType` and `ArrayType` to map the data 1:1. |
-| API Rate Limiting         | The API would occasionally block requests. We built a retry loop with exponential backoff to handle 429 and 5xx errors gracefully. |
-| PySpark on Windows        | Spark struggled to launch Python workers due to environment path issues. We added a utility function to force `PYSPARK_PYTHON` to point to the active virtual environment. |
+| Schema Inference Failure  | Spark failed to read nested JSON correctly, treating arrays as strings. I implemented a strict custom schema using `StructType` and `ArrayType` to map the data 1:1. |
+| API Rate Limiting         | The API would occasionally block requests. I built a retry loop with exponential backoff to handle 429 and 5xx errors gracefully. |
+| PySpark on Windows        | Spark struggled to launch Python workers due to environment path issues. I added a utility function to force `PYSPARK_PYTHON` to point to the active virtual environment. |
 
 ---
 
 ### 5. Conclusion & Future Work
 The "TMDB Movie Data Analysis" project demonstrates a complete lifecycle for modern data engineering. By prioritizing scalability (Spark), reliability (Retries/Logging), and maintainability (Modules/Tests), the system is production-ready.
+
+**4.1 What I Learnt**
+Through the execution of this lab, I gained practical experience in several advanced engineering concepts:
+
+**Scalable Data Processing (Spark vs. Pandas):** I learned how to shift from "in-memory" processing with Pandas to distributed processing with PySpark. I understood the importance of Lazy Evaluation (transformations are not executed until an action is called) and how to use Vectorized Expressions (e.g., F.expr) to process data efficiently without using slow Python loops.
+
+**Handling Semi-Structured Data:** One of the biggest challenges was parsing nested JSON arrays from the API. I learnt that Spark's automatic schema inference can be unreliable (misidentifying arrays as strings). I mastered the concept of Strict Schema Enforcement, defining custom StructType schemas to ensure no data was lost during ingestion.
+
+**Production-Grade Reliability:** I moved beyond simple scripts by implementing Robust Ingestion Logic. I learnt how to handle real-world API issues like Rate Limits (HTTP 429) and Server Errors (HTTP 500) using exponential backoff and retry loops, ensuring the pipeline is resilient.
+
+**Software Engineering Best Practices:** I learnt to structure a data project professionally by decoupling code into modules (src/) rather than keeping everything in a notebook. I also gained experience in Unit Testing with pytest to validate business logic before deployment and managing sensitive credentials securely using .env files.
 
 **Future Enhancements:**
 
