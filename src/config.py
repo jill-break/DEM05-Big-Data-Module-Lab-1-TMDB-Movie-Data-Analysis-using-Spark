@@ -1,4 +1,3 @@
-# src/config.py
 import os
 from pyspark.sql.types import (
     StructType, StructField, StringType, IntegerType, 
