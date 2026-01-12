@@ -34,10 +34,6 @@ def analyze_franchises(df: DataFrame):
 def get_successful_directors(df: DataFrame):
     """
     Identifies successful directors based on Total Revenue and Movie Count.
-    Note: 'director' is not in the default API response for 'get_movie_details',
-    it usually requires the 'credits' endpoint. 
-    *Assumption*: We will use 'production_companies' as a proxy for this exercise
-    if director data is missing, or we assume the API fetch included credits.
     """
     # Assuming 'production_companies' for the demo as 'director' might be missing
     # In a real scenario, you'd explode the crew array.

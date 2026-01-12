@@ -5,7 +5,7 @@ from pyspark.sql.types import (
 )
 from dotenv import load_dotenv
 
-# --- ROBUST .ENV LOADING ---
+# --- .ENV LOADING ---
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 env_path = os.path.join(project_root, '.env')
@@ -32,7 +32,6 @@ FINAL_COL_ORDER = [
 ]
 
 # --- STRICT SCHEMAS ---
-# These define what a single item inside the array/struct looks like
 GENRE_STRUCT = StructType([
     StructField("id", IntegerType(), True),
     StructField("name", StringType(), True)
@@ -88,7 +87,7 @@ RAW_SCHEMA = StructType([
     StructField("production_countries", ArrayType(COUNTRY_STRUCT), True),
     StructField("spoken_languages", ArrayType(LANGUAGE_STRUCT), True),
     
-    # Fields we might drop later but need to read first
+    # Fields drop later but need to read first
     StructField("adult", BooleanType(), True),
     StructField("imdb_id", StringType(), True),
     StructField("homepage", StringType(), True),

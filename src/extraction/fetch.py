@@ -94,7 +94,6 @@ def fetch_movie_data(movie_ids: List[int], api_key: str, base_url: str) -> List[
                 movies_data.append(data)
             
             # --- 3. RATE LIMITING ---
-            # Basic courtesy sleep to avoid hitting the 429 error in the first place
             time.sleep(0.2) 
 
     logger.info(f"Ingestion complete. Successfully fetched {len(movies_data)}/{len(movie_ids)} movies.")

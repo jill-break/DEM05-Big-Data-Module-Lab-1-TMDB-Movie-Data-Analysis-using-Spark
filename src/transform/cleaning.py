@@ -1,8 +1,12 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
+
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType, DateType
+from src.extraction.config import DROP_COLS, FINAL_COL_ORDER
 
-from src.config import DROP_COLS, FINAL_COL_ORDER
 
 def clean_movie_data(df: DataFrame) -> DataFrame:
     """
@@ -22,7 +26,6 @@ def clean_movie_data(df: DataFrame) -> DataFrame:
         df = df.withColumn("belongs_to_collection", F.col("belongs_to_collection.name"))
 
     # Extract Array Items (Array<Struct> -> String "A|B|C")
-    # We use 'transform' (SQL expression) which is safer than dot notation for Arrays
     array_cols = ['genres', 'production_countries', 'production_companies', 'spoken_languages']
     
     for col_name in array_cols:
