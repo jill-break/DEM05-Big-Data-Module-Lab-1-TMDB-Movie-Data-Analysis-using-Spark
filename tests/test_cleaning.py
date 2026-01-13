@@ -1,7 +1,7 @@
 import pytest
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, LongType, ArrayType, IntegerType
-from transform.cleaning import clean_movie_data
+from src.transform.cleaning import clean_movie_data
 
 # 1. Create a reusable Spark Session for tests
 @pytest.fixture(scope="session")

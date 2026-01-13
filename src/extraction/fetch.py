@@ -16,7 +16,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join(log_dir, "ingestion.log")), # Log to file
+        logging.FileHandler(os.path.join(log_dir, "fetch.log")), # Log to file
         logging.StreamHandler()                                      # Log to console
     ]
 )

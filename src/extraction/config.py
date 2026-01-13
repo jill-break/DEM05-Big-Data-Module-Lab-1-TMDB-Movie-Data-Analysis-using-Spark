@@ -1,9 +1,28 @@
 import os
+import logging
 from pyspark.sql.types import (
     StructType, StructField, StringType, IntegerType, 
     ArrayType, LongType, DoubleType, BooleanType, MapType
 )
 from dotenv import load_dotenv
+
+# --- 1. SETUP LOGGING ---
+# Create a 'logs' directory if it doesn't exist
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+log_dir = os.path.join(project_root, 'logs')
+os.makedirs(log_dir, exist_ok=True)
+
+# Configure the logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, "config.log")), # Log to file
+        logging.StreamHandler()                                      # Log to console
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # --- .ENV LOADING ---
 current_dir = os.path.dirname(os.path.abspath(__file__))

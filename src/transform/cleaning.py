@@ -1,11 +1,29 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
-
+import logging
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType, DateType
 from src.extraction.config import DROP_COLS, FINAL_COL_ORDER
+
+# --- 1. SETUP LOGGING ---
+# Create a 'logs' directory if it doesn't exist
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+log_dir = os.path.join(project_root, 'logs')
+os.makedirs(log_dir, exist_ok=True)
+
+# Configure the logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, "cleaning.log")), # Log to file
+        logging.StreamHandler()                                      # Log to console
+    ]
+)
+logger = logging.getLogger(__name__)
 
 
 def clean_movie_data(df: DataFrame) -> DataFrame:
@@ -16,6 +34,7 @@ def clean_movie_data(df: DataFrame) -> DataFrame:
     # Check if columns exist before dropping to avoid errors if run twice
     cols_to_drop = [c for c in DROP_COLS if c in df.columns]
     df = df.drop(*cols_to_drop)
+    logger.info(f"Dropped columns: {cols_to_drop}")
 
     # 2. Parse Nested JSON Structures
     # Spark automatically infers nested JSON as Structs or Arrays of Structs.
@@ -24,6 +43,7 @@ def clean_movie_data(df: DataFrame) -> DataFrame:
     # Check if column exists first (some movies might have no collection info at all)
     if "belongs_to_collection" in df.columns:
         df = df.withColumn("belongs_to_collection", F.col("belongs_to_collection.name"))
+        logger.info("Extracted 'belongs_to_collection' names")
 
     # Extract Array Items (Array<Struct> -> String "A|B|C")
     array_cols = ['genres', 'production_countries', 'production_companies', 'spoken_languages']
@@ -34,6 +54,7 @@ def clean_movie_data(df: DataFrame) -> DataFrame:
             # loops through it as 'x', and extracts 'x.name'
             df = df.withColumn(col_name, 
                                F.array_join(F.expr(f"transform({col_name}, x -> x.name)"), "|"))
+            logger.info(f"Extracted and joined array column: {col_name}")
 
     # 3. Handle Numeric Conversions & Missing Values
     # Convert Budget/Revenue to Millions and Handle 0s
@@ -81,4 +102,5 @@ def clean_movie_data(df: DataFrame) -> DataFrame:
     if "profit" in df.columns: extras.append("profit")
     if "roi" in df.columns: extras.append("roi")
     
+    logger.info("Finalizing cleaned DataFrame with selected columns.")
     return df.select(existing_cols + extras)

@@ -2,6 +2,25 @@ import logging
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from pyspark.sql.functions import year, explode, split, col, median, mean, count
+import os
+
+# --- 1. SETUP LOGGING ---
+# Create a 'logs' directory if it doesn't exist
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+log_dir = os.path.join(project_root, 'logs')
+os.makedirs(log_dir, exist_ok=True)
+
+# Configure the logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, "visualizationPrep.log")), # Log to file
+        logging.StreamHandler()                                      # Log to console
+    ]
+)
+logger = logging.getLogger(__name__)
 
 class VisualizationPreparer:
     """
@@ -16,6 +35,7 @@ class VisualizationPreparer:
 
     def prepare_yearly_trends(self) -> DataFrame:
         """Extracts year from release_date and aggregates performance metrics."""
+        logger.info("Preparing yearly trends data")
         return self.df.withColumn("year", year("release_date")) \
             .groupBy("year") \
             .agg(
@@ -27,6 +47,7 @@ class VisualizationPreparer:
 
     def prepare_genre_data(self) -> DataFrame:
         """Explodes pipe-separated genres and calculates Median ROI per genre."""
+        logger.info("Preparing genre-wise median ROI data")
         return self.df.withColumn("genre", explode(split("genres", "\|"))) \
             .groupBy("genre") \
             .agg(median("roi").alias("median_roi")) \
@@ -34,6 +55,7 @@ class VisualizationPreparer:
 
     def prepare_franchise_data(self) -> DataFrame:
         """Categorizes movies as Franchise vs Standalone and calculates means."""
+        logger.info("Preparing franchise vs standalone data")
         return self.df.withColumn("type", 
                     F.when(col("belongs_to_collection").isNotNull(), "Franchise")
                     .otherwise("Standalone")) \
