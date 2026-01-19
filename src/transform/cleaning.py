@@ -1,106 +1,94 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 import logging
-from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
-from pyspark.sql.types import DoubleType, IntegerType, DateType
+import os
+from pyspark.sql import DataFrame, functions as F
+from pyspark.sql.types import DoubleType
 from src.extraction.config import DROP_COLS, FINAL_COL_ORDER
 
-# --- 1. SETUP LOGGING ---
-# Create a 'logs' directory if it doesn't exist
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_dir)
-log_dir = os.path.join(project_root, 'logs')
-os.makedirs(log_dir, exist_ok=True)
-
-# Configure the logger
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(os.path.join(log_dir, "cleaning.log")), # Log to file
-        logging.StreamHandler()                                      # Log to console
-    ]
-)
-logger = logging.getLogger(__name__)
-
-
-def clean_movie_data(df: DataFrame) -> DataFrame:
+class MovieTransformer:
     """
-    Main driver function for cleaning the movie dataset.
+    Production-grade Spark transformer for movie data.
+    Uses a functional approach to clean and enrich datasets.
     """
-    # 1. Drop irrelevant columns immediately to save memory
-    # Check if columns exist before dropping to avoid errors if run twice
-    cols_to_drop = [c for c in DROP_COLS if c in df.columns]
-    df = df.drop(*cols_to_drop)
-    logger.info(f"Dropped columns: {cols_to_drop}")
 
-    # 2. Parse Nested JSON Structures
-    # Spark automatically infers nested JSON as Structs or Arrays of Structs.
-    
-    # Extract Collection Name (Struct -> String)
-    # Check if column exists first (some movies might have no collection info at all)
-    if "belongs_to_collection" in df.columns:
-        df = df.withColumn("belongs_to_collection", F.col("belongs_to_collection.name"))
-        logger.info("Extracted 'belongs_to_collection' names")
+    def __init__(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
 
-    # Extract Array Items (Array<Struct> -> String "A|B|C")
-    array_cols = ['genres', 'production_countries', 'production_companies', 'spoken_languages']
-    
-    for col_name in array_cols:
-        if col_name in df.columns:
-            # transform(genres, x -> x.name) takes the array 'genres', 
-            # loops through it as 'x', and extracts 'x.name'
-            df = df.withColumn(col_name, 
-                               F.array_join(F.expr(f"transform({col_name}, x -> x.name)"), "|"))
-            logger.info(f"Extracted and joined array column: {col_name}")
+    def drop_irrelevant_columns(self, df: DataFrame) -> DataFrame:
+        cols_to_drop = [c for c in DROP_COLS if c in df.columns]
+        self.logger.info(f"Dropping {len(cols_to_drop)} irrelevant columns.")
+        return df.drop(*cols_to_drop)
 
-    # 3. Handle Numeric Conversions & Missing Values
-    # Convert Budget/Revenue to Millions and Handle 0s
-    for col in ['budget', 'revenue']:
-        if col in df.columns:
-            df = df.withColumn(f"{col}_musd", 
-                            F.when(F.col(col) == 0, None)
-                                .otherwise(F.col(col) / 1000000).cast(DoubleType()))
-    
-    # Handle Runtime (0 -> NaN equivalent)
-    if "runtime" in df.columns:
-        df = df.withColumn("runtime", 
-                        F.when(F.col("runtime") == 0, None)
-                            .otherwise(F.col("runtime").cast(DoubleType())))
+    def handle_nested_json(self, df: DataFrame) -> DataFrame:
+        """Flattens structs and joins arrays into pipe-separated strings."""
+        # 1. Handle Collection Struct
+        if "belongs_to_collection" in df.columns:
+            df = df.withColumn("belongs_to_collection", F.col("belongs_to_collection.name"))
 
-    # 4. Handle Dates
-    if "release_date" in df.columns:
-        df = df.withColumn("release_date", F.to_date(F.col("release_date"), "yyyy-MM-dd"))
-    
-    # 5. Clean Text Placeholders
-    text_cols = ['overview', 'tagline']
-    for col in text_cols:
-        if col in df.columns:
-            df = df.withColumn(col, 
-                            F.when(F.col(col).isin("No Data", ""), None)
-                                .otherwise(F.col(col)))
+        # 2. Handle Arrays of Structs
+        array_cols = ['genres', 'production_countries', 'production_companies', 'spoken_languages']
+        for col_name in array_cols:
+            if col_name in df.columns:
+                df = df.withColumn(col_name, 
+                    F.array_join(F.expr(f"transform({col_name}, x -> x.name)"), "|"))
+        
+        self.logger.info("Nested JSON structures flattened and joined.")
+        return df
 
-    # 6. Filter: Must be Released
-    if "status" in df.columns:
-        df = df.filter(F.col("status") == "Released")
-    
-    # 7. Add Calculated Columns for KPIs (ROI)
-    # ROI = Revenue / Budget
-    # Ensure columns exist before calculation
-    if "revenue_musd" in df.columns and "budget_musd" in df.columns:
-        df = df.withColumn("profit", F.col("revenue_musd") - F.col("budget_musd"))
-        df = df.withColumn("roi", F.col("revenue_musd") / F.col("budget_musd"))
+    def convert_financials(self, df: DataFrame) -> DataFrame:
+        """Converts budget/revenue to MUSD and handles zero-value placeholders."""
+        for col_name in ['budget', 'revenue']:
+            if col_name in df.columns:
+                df = df.withColumn(f"{col_name}_musd", 
+                    F.when(F.col(col_name) == 0, None)
+                    .otherwise(F.col(col_name) / 1000000).cast(DoubleType()))
+        
+        if "runtime" in df.columns:
+            df = df.withColumn("runtime", 
+                F.when(F.col("runtime") == 0, None)
+                .otherwise(F.col("runtime").cast(DoubleType())))
+        
+        return df
 
-    # 8. Final Selection and Reordering
-    # Select only columns that exist in the dataframe to avoid errors
-    existing_cols = [c for c in FINAL_COL_ORDER if c in df.columns]
-    
-    # Add profit and roi to the final selection if they were created
-    extras = []
-    if "profit" in df.columns: extras.append("profit")
-    if "roi" in df.columns: extras.append("roi")
-    
-    logger.info("Finalizing cleaned DataFrame with selected columns.")
-    return df.select(existing_cols + extras)
+    def handle_dates_and_text(self, df: DataFrame) -> DataFrame:
+        """Normalizes date formats and clears text placeholders."""
+        if "release_date" in df.columns:
+            df = df.withColumn("release_date", F.to_date(F.col("release_date"), "yyyy-MM-dd"))
+        
+        text_cols = ['overview', 'tagline']
+        for col in text_cols:
+            if col in df.columns:
+                df = df.withColumn(col, 
+                    F.when(F.col(col).isin("No Data", ""), None).otherwise(F.col(col)))
+        
+        return df
+
+    def calculate_kpis(self, df: DataFrame) -> DataFrame:
+        """Calculates Profit and ROI metrics."""
+        if "revenue_musd" in df.columns and "budget_musd" in df.columns:
+            df = df.withColumn("profit", F.col("revenue_musd") - F.col("budget_musd"))
+            df = df.withColumn("roi", F.col("revenue_musd") / F.col("budget_musd"))
+        return df
+
+    def run_pipeline(self, df: DataFrame) -> DataFrame:
+        """
+        Orchestrates the cleaning pipeline. 
+        Uses Spark's .transform() to chain methods cleanly.
+        """
+        self.logger.info("Starting Movie Data Transformation Pipeline...")
+        
+        # Chaining transformations for a clean "recipe" view
+        df_cleaned = (df
+            .transform(self.drop_irrelevant_columns)
+            .transform(self.handle_nested_json)
+            .transform(self.convert_financials)
+            .transform(self.handle_dates_and_text)
+            .filter(F.col("status") == "Released") # Requirement: Must be released
+            .transform(self.calculate_kpis)
+        )
+
+        # Final column selection
+        existing_cols = [c for c in FINAL_COL_ORDER if c in df_cleaned.columns]
+        extra_kpis = [k for k in ["profit", "roi"] if k in df_cleaned.columns]
+        
+        self.logger.info("Pipeline completed successfully.")
+        return df_cleaned.select(existing_cols + extra_kpis)
