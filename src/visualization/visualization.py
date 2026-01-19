@@ -58,7 +58,7 @@ def plot_yearly_trends(pdf_yearly):
     axes[1, 1].set_ylabel('ROI')
     axes[1, 1].legend()
 
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95]) # type: ignore
     plt.show()
 
 def plot_genre_roi(pdf_genre):
