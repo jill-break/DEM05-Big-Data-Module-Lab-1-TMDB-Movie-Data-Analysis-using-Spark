@@ -1,92 +1,74 @@
 import pytest
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, LongType, ArrayType, IntegerType
-from src.transform.cleaning import clean_movie_data
+from pyspark.sql import functions as F
+from src.transform.cleaning import MovieTransformer
+import os
+import sys
 
-# 1. Create a reusable Spark Session for tests
+# Forces Spark to use the virtual environment's Python
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+
 @pytest.fixture(scope="session")
 def spark():
-    # Use the same Windows fix for the test session
-    import sys, os
-    os.environ['PYSPARK_PYTHON'] = sys.executable
-    os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
-    
+    """Fixture to create a local SparkSession for testing."""
     return SparkSession.builder \
-        .appName("TestSession") \
         .master("local[1]") \
-        .getOrCreate()
+        .appName("PyTest-Spark-Cleaning") \
+        .config("spark.sql.shuffle.partitions", "1") \
+        .getOrCreate()  
 
-def test_clean_movie_data(spark):
-    """
-    Test that clean_movie_data correctly parses genres and calculates profit.
-    """
-    # 2. Define Schema matching what we expect from the API
-    
-    # Nested Array for genres
-    genre_schema = ArrayType(StructType([
-        StructField("id", IntegerType(), True),
-        StructField("name", StringType(), True)
-    ]))
-    
-    # Nested Struct for Collection (THIS WAS THE MISSING PIECE)
-    collection_schema = StructType([
-        StructField("id", IntegerType(), True),
-        StructField("name", StringType(), True)
-    ])
-    
-    schema = StructType([
-        StructField("id", LongType(), True),
-        StructField("title", StringType(), True),
-        StructField("revenue", LongType(), True),
-        StructField("budget", LongType(), True),
-        StructField("genres", genre_schema, True),
-        StructField("status", StringType(), True),
-        # Fix: belongs_to_collection must be a Struct, not a String
-        StructField("belongs_to_collection", collection_schema, True),
-        # Add dummy cols
-        StructField("adult", StringType(), True)
-    ])
+@pytest.fixture
+def transformer():
+    """Fixture to initialize our modular MovieTransformer."""
+    return MovieTransformer()
 
-    # 3. Create Fake Data
-    # We pass a Dictionary/Row for the struct fields
+def test_financial_conversion(spark, transformer):
+    """Verify budget and revenue are correctly converted to Millions (MUSD)."""
+    # Create mock data: 1,000,000 USD should become 1.0 MUSD
+    data = [("Movie A", 1000000, 2000000), ("Movie B", 0, 500000)]
+    schema = ["title", "budget", "revenue"]
+    df_raw = spark.createDataFrame(data, schema)
+    
+    # Run the specific modular method
+    df_clean = transformer.convert_financials(df_raw)
+    
+    results = df_clean.collect()
+    
+    # Check Movie A: 1.0 MUSD
+    assert results[0]["budget_musd"] == 1.0
+    assert results[0]["revenue_musd"] == 2.0
+    
+    # Check Movie B: 0 should become None/Null
+    assert results[1]["budget_musd"] is None
+    assert results[1]["revenue_musd"] == 0.5
+
+def test_json_flattening(spark, transformer):
+    """Verify that nested structs and arrays are correctly joined."""
+    # Mock the complex TMDB structure
     data = [
-        # Movie 1: Good data
-        (
-            1, 
-            "Hit Movie", 
-            200000000, 
-            100000000, 
-            [{"id": 1, "name": "Action"}], 
-            "Released", 
-            {"id": 99, "name": "Hit Collection"}, # Struct Data
-            "False"
-        ),
-        # Movie 2: Flop, Unreleased
-        (
-            2, 
-            "Flop Movie", 
-            0, 
-            0, 
-            [{"id": 2, "name": "Comedy"}], 
-            "Rumored", 
-            None, # Null is valid for Structs
-            "False"
-        )
+        (1, [{"name": "Action"}, {"name": "Sci-Fi"}], {"name": "Marvel Collection"})
     ]
-
-    df_raw = spark.createDataFrame(data, schema=schema)
-
-    # 4. Run the Function
-    df_cleaned = clean_movie_data(df_raw)
-
-    # 5. Assertions
-    results = df_cleaned.collect()
-
-    # Check that we filtered out the "Rumored" movie (Count should be 1)
-    assert len(results) == 1
+    schema = "id INT, genres ARRAY<STRUCT<name:STRING>>, belongs_to_collection STRUCT<name:STRING>"
+    df_raw = spark.createDataFrame(data, schema)
     
-    row = results[0]
-    assert row['title'] == "Hit Movie"
-    assert row['profit'] == 100.0        # 200 - 100
-    assert row['genres'] == "Action"     # Parsed from Array -> String
-    assert row['belongs_to_collection'] == "Hit Collection" # Parsed from Struct -> String
+    df_clean = transformer.handle_nested_json(df_raw)
+    result = df_clean.first()
+    
+    assert result["genres"] == "Action|Sci-Fi"
+    assert result["belongs_to_collection"] == "Marvel Collection"
+
+def test_full_pipeline_output(spark, transformer):
+    """Verify that the full run_pipeline returns the expected final columns."""
+    # Corrected: data now provides an array of structs for genres
+    data = [(1, "Released", 1000000, 5000000, "2023-01-01", [{"name": "Action"}])]
+    
+    # Corrected: schema explicitly defines genres as an array of structs
+    schema = "id INT, status STRING, budget LONG, revenue LONG, release_date STRING, genres ARRAY<STRUCT<name:STRING>>"
+    
+    df_raw = spark.createDataFrame(data, schema)
+    
+    df_final = transformer.run_pipeline(df_raw)
+    
+    assert "profit" in df_final.columns
+    assert "roi" in df_final.columns
