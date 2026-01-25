@@ -121,7 +121,7 @@ Through the execution of this lab, I gained practical experience in several adva
 
 ### 6. Project Deliverables Checklist
 - [x] **Source Code:** Modularized Python scripts (`src/`) for Ingestion, Cleaning, and Analysis.
-- [x] **Orchestration:** Jupyter Notebook (`lab_runner.ipynb`) executing the full pipeline.
+- [x] **Orchestration:** Jupyter Notebook (`spark_lab.ipynb`) executing the full pipeline.
 - [x] **Data Quality:** Unit tests (`tests/`) and Logging (`logs/`).
 - [x] **Documentation:** `README.md` with setup instructions.
 - [x] **Datasets:** Raw JSON and Processed CSV exports.
