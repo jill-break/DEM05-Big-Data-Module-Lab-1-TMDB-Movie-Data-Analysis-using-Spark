@@ -40,7 +40,7 @@ data/
 	├─ raw/
 	└─ processed/
 notebooks/
-	└─ lab_runner.ipynb
+	└─ spark_lab.ipynb
 src/
 	├─ __init__.py
 	├─ config.py         # environment & schemas
@@ -67,4 +67,5 @@ tests/
 ## License
 
 Educational use — data provided by The Movie Database (TMDB). Check TMDB terms for API usage restrictions.
+
 
