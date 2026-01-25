@@ -88,7 +88,7 @@ def fetch_movie_data(movie_ids: List[int], api_key: str, base_url: str) -> List[
         for idx, movie_id in enumerate(movie_ids):
             
             # Call the helper function with retry logic
-            data = fetch_single_movie(session, movie_id, base_url, {"api_key": api_key, "language": "en-US"})
+            data = fetch_single_movie(session, movie_id, base_url, {"api_key": api_key, "language": "en-US", "append_to_response": "credits"})
             
             if data:
                 movies_data.append(data)

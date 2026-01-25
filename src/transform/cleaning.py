@@ -21,11 +21,18 @@ class MovieTransformer:
     def handle_nested_json(self, df: DataFrame) -> DataFrame:
         """Flattens structs and joins arrays into pipe-separated strings."""
         # 1. Handle Collection Struct
+        self.logger.info(f"Schema before nested json handling: {df.schema.simpleString()}")
         if "belongs_to_collection" in df.columns:
             df = df.withColumn("belongs_to_collection", F.col("belongs_to_collection.name"))
 
-        # 2. Handle Arrays of Structs
-        array_cols = ['genres', 'production_countries', 'production_companies', 'spoken_languages']
+        # 2. Handle cast (from credits)
+        if "credits" in df.columns:
+            df = df.withColumn("cast", F.col("credits.cast")) \
+                .withColumn("crew", F.col("credits.crew")) \
+                .withColumn("director", F.expr("element_at(filter(credits.crew, x -> x.job == 'Director'), 1).name"))
+
+        # 3. Handle Arrays of Structs
+        array_cols = ['genres', 'production_countries', 'production_companies', 'spoken_languages', 'cast', 'crew']
         for col_name in array_cols:
             if col_name in df.columns:
                 df = df.withColumn(col_name, 

@@ -9,3 +9,13 @@ data/raw/*
 data/processed/*
 .vscode/
 .idea/
+notebooks/.ipynb_checkpoints/
+src/__pycache__/
+src/.ipynb_checkpoints/
+src/notebooks/.ipynb_checkpoints/
+src/notebooks/*.ipynb
+.DS_Store   
+notebooks/data/*
+notebooks/logs/*
+verify_director.py
+verify_fix.py

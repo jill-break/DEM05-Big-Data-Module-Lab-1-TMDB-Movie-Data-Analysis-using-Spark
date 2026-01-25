@@ -47,7 +47,7 @@ FINAL_COL_ORDER = [
     'id', 'title', 'tagline', 'release_date', 'genres', 'belongs_to_collection',
     'original_language', 'budget_musd', 'revenue_musd', 'production_companies',
     'production_countries', 'vote_count', 'vote_average', 'popularity',
-    'runtime', 'overview', 'spoken_languages', 'poster_path'
+    'runtime', 'overview', 'spoken_languages', 'poster_path', 'cast', 'crew', 'director'
 ]
 
 # --- STRICT SCHEMAS ---
@@ -81,6 +81,22 @@ COLLECTION_STRUCT = StructType([
     StructField("backdrop_path", StringType(), True)
 ])
 
+CAST_STRUCT = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("name", StringType(), True)
+])
+
+CREW_STRUCT = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("name", StringType(), True),
+    StructField("job", StringType(), True)
+])
+
+CREDITS_STRUCT = StructType([
+    StructField("cast", ArrayType(CAST_STRUCT), True),
+    StructField("crew", ArrayType(CREW_STRUCT), True)
+])
+
 # --- MASTER RAW SCHEMA ---
 # This matches the full JSON response from TMDB
 RAW_SCHEMA = StructType([
@@ -98,6 +114,7 @@ RAW_SCHEMA = StructType([
     StructField("vote_count", LongType(), True),
     StructField("original_language", StringType(), True),
     StructField("poster_path", StringType(), True),
+    StructField("credits", CREDITS_STRUCT, True),
     
     # Complex Nested Fields
     StructField("belongs_to_collection", COLLECTION_STRUCT, True),
