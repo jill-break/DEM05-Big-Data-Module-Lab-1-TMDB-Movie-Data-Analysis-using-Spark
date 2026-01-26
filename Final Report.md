@@ -57,7 +57,7 @@ Framework: `pytest`
 **3.1 The "Blockbuster" Economy**
 The dataset confirms the industry's reliance on massive tentpole productions.
 
-`Revenue Drivers:` The top 10% of movies by budget accounted for a disproportionately large share of the total revenue.
+`Revenue Drivers:` The top 10% of movies by budget accounted for a large share of the total revenue.
 
 `Budget Inflation`: A clear trend line shows the average budget for high-profile movies has steadily increased over the last two decades.
 
@@ -103,7 +103,7 @@ Through the execution of this lab, I gained practical experience in several adva
 
 **Scalable Data Processing (Spark vs. Pandas):** I learned how to shift from "in-memory" processing with Pandas to distributed processing with PySpark. I understood the importance of Lazy Evaluation (transformations are not executed until an action is called) and how to use Vectorized Expressions (e.g., F.expr) to process data efficiently without using slow Python loops.
 
-**Handling Semi-Structured Data:** One of the biggest challenges was parsing nested JSON arrays from the API. I learnt that Spark's automatic schema inference can be unreliable (misidentifying arrays as strings). I mastered the concept of Strict Schema Enforcement, defining custom StructType schemas to ensure no data was lost during ingestion.
+**Handling Semi-Structured Data:** One of the biggest challenges was parsing nested JSON arrays from the API. I learnt that Spark's automatic schema inference can be unreliable (misidentifying arrays as strings). I used the concept of Strict Schema Enforcement, defining custom StructType schemas to ensure no data was lost during ingestion.
 
 **Production-Grade Reliability:** I moved beyond simple scripts by implementing Robust Ingestion Logic. I learnt how to handle real-world API issues like Rate Limits (HTTP 429) and Server Errors (HTTP 500) using exponential backoff and retry loops, ensuring the pipeline is resilient.
 
@@ -124,4 +124,5 @@ Through the execution of this lab, I gained practical experience in several adva
 - [x] **Orchestration:** Jupyter Notebook (`spark_lab.ipynb`) executing the full pipeline.
 - [x] **Data Quality:** Unit tests (`tests/`) and Logging (`logs/`).
 - [x] **Documentation:** `README.md` with setup instructions.
+- [x] **Final Report:** Summary of key insights, methodology, and conclusions.
 - [x] **Datasets:** Raw JSON and Processed CSV exports.
