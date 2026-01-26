@@ -57,7 +57,7 @@ tests/
 ## Data
 
 - `data/raw/` — raw JSON responses from TMDB (not committed to git)
-- `data/processed/` — cleaned parquet/csv results used by analyses and visualizations
+- `data/processed/` — cleaned csv results used by analyses and visualizations
 
 ## Notebooks & Scripts
 
@@ -67,5 +67,6 @@ tests/
 ## License
 
 Educational use — data provided by The Movie Database (TMDB). Check TMDB terms for API usage restrictions.
+
 
 
