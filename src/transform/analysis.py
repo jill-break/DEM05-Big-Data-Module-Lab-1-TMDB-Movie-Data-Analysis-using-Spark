@@ -8,7 +8,7 @@ class MovieAnalyzer:
     Complete modular analysis engine for TMDB data.
     """
     
-    def __init__(self, spark_df: DataFrame = None, pandas_df: pd.DataFrame = None):
+    def __init__(self, spark_df: DataFrame = None, pandas_df: pd.DataFrame = None): # type: ignore
         self.logger = self._setup_logging()
         self.spark_df = spark_df
         self.pdf = pandas_df
@@ -62,10 +62,10 @@ class MovieAnalyzer:
             F.mean("vote_average").alias("avg_rating")
         ).orderBy(F.col("total_revenue").desc())
 
-    # --- 4. Formatted Reporting (Pandas) ---
+    # --- 4. Formatted Reporting ---
     def get_franchise_comparison(self) -> pd.DataFrame:
         """Formatted Pandas table for Franchise vs Standalone comparison."""
-        self.logger.info("Generating Franchise comparison report")
+        self.logger.info("Logging Franchise comparison report")
         df = self.pdf.copy()
         df['is_franchise'] = df['belongs_to_collection'].notna()
         
@@ -97,7 +97,7 @@ class MovieAnalyzer:
         """
         Analyzes franchises by movie count, total/mean financials, and ratings.
         """
-        self.logger.info(f"Generating detailed success report for top {n} franchises.")
+        self.logger.info(f"Logging detailed success report for top {n} franchises.")
         
         # Filter for only movies that belong to a franchise
         franchises = self.pdf[self.pdf['belongs_to_collection'].notna()]

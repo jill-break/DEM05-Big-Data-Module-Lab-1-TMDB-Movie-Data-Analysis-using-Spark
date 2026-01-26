@@ -72,7 +72,7 @@ def plot_genre_roi(pdf_genre):
     plt.xlabel('Median ROI (x Times Budget)', fontsize=12)
     plt.ylabel('Genre', fontsize=12)
     plt.grid(axis='x', linestyle='--', alpha=0.7)
-
+    plt.legend(['Genre'])
     # Add labels
     for i, v in enumerate(pdf_genre["median_roi"]):
         plt.text(v + 0.1, i, f"{v:.2f}x", color='black', va='center', fontsize=10)
@@ -102,7 +102,7 @@ def plot_franchise_comparison(pdf_franchise):
     fig.suptitle('Franchise vs Standalone Movie Performance', fontsize=14, weight='bold')
 
     def _plot_sub(ax, y_col, title, ylabel, is_rating=False):
-        # FIX: Added hue='type' and legend=False to silence warnings
+        
         sns.barplot(
             data=pdf_franchise, 
             x='type', 
@@ -111,7 +111,7 @@ def plot_franchise_comparison(pdf_franchise):
             ax=ax, 
             palette=['#2b8cbe', '#a53e74'], 
             edgecolor='black',
-            legend=False
+            legend=True
         )
         ax.set_title(title)
         ax.set_ylabel(ylabel)
@@ -119,12 +119,12 @@ def plot_franchise_comparison(pdf_franchise):
         ax.grid(axis='y', linestyle='-', alpha=0.3)
         if is_rating:
             ax.set_ylim(0, 10)
-
+    
     _plot_sub(axes[0, 0], 'mean_revenue', 'Average Revenue (M USD)', 'Million USD')
     _plot_sub(axes[0, 1], 'mean_roi', 'Average ROI', 'ROI Multiplier')
     _plot_sub(axes[1, 0], 'mean_budget', 'Average Budget (M USD)', 'Million USD')
     _plot_sub(axes[1, 1], 'mean_rating', 'Average Rating', 'Rating (out of 10)', is_rating=True)
-
+    
     plt.show()
 
 def plot_popularity_vs_rating(pdf_scatter):

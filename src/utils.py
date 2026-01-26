@@ -8,13 +8,12 @@ def get_spark_session(app_name="TMDB_Analysis"):
     Configures Arrow for efficient conversion to Pandas for visualization.
     """
     
-    # --- CRITICAL WINDOWS FIX ---
     # Force Spark to use the currently active Python executable (inside .venv)
     # for both the driver and the worker processes. This prevents the "worker failed to connect" error.
     os.environ['PYSPARK_PYTHON'] = sys.executable
     os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
     
-    # Windows specific fix: locate hadoop binaries if not set
+    # Handle Windows-specific Hadoop requirement
     if sys.platform == "win32" and "HADOOP_HOME" not in os.environ:
          pass
 
