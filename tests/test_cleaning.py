@@ -60,10 +60,10 @@ def test_json_flattening(spark, transformer):
 
 def test_full_pipeline_output(spark, transformer):
     """Verify that the full run_pipeline returns the expected final columns."""
-    # Corrected: data now provides an array of structs for genres
+    # Minimal mock data to run through the full pipeline
     data = [(1, "Released", 1000000, 5000000, "2023-01-01", [{"name": "Action"}])]
     
-    # Corrected: schema explicitly defines genres as an array of structs
+    # Define schema
     schema = "id INT, status STRING, budget LONG, revenue LONG, release_date STRING, genres ARRAY<STRUCT<name:STRING>>"
     
     df_raw = spark.createDataFrame(data, schema)
