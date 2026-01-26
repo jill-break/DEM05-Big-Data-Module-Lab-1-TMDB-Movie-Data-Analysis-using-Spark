@@ -1,6 +1,6 @@
 # Final Report: TMDB Movie Data Analysis Pipeline
 ## Technology Stack: 
-Python 3.11, Apache Spark (PySpark 3.5), TMDb API, Pandas, Matplotlib/Seaborn, Pytest
+Python 3.11, Apache Spark (PySpark 3.5), TMDb API, Matplotlib/Seaborn (Visualization), Pytest
 
 ---
 ### 1. Executive Summary
@@ -28,10 +28,10 @@ Objective: Securely fetch data from an external REST API while adhering to rate 
 
 `Observability:` Integrated a file-based logging system (logs/ingestion.log). This provides an audit trail of every API attempt, success, or failure, which is critical for debugging in production environments.
 
-**2.2 Processing Layer (Transform)**
-`Objective:` Clean and structure nested JSON data for analytical querying.
+**2.2 Processing & Analysis Layer (Transform)**
+`Objective:` Clean, structure, and analyze large-scale movie data.
 
-`Engine:` Apache Spark (PySpark) was selected over Pandas to ensure horizontal scalability.
+`Engine:` **Apache Spark (PySpark)** was used exclusively for both ETL transformations and complex KPI calculations. This replaces traditional "hybrid" workflows (using Pandas for aggregation) to ensure true horizontal scalability.
 
 **Key Engineering Challenge:**
 

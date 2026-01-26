@@ -1,6 +1,6 @@
-# TMDB Movie Data Analysis (PySpark + Pandas)
+# TMDB Movie Data Analysis (PySpark)
 
-A compact ETL and analysis project that ingests movie data from The Movie Database (TMDB) API, processes it with PySpark (and Pandas for smaller analyses), computes KPIs (ROI, profitability, franchise stats), and generates visualizations.
+A compact ETL and analysis project that ingests movie data from The Movie Database (TMDB) API, processes and analyzes it with PySpark, computes KPIs (ROI, profitability, franchise stats), and generates visualizations.
 
 ---
 
